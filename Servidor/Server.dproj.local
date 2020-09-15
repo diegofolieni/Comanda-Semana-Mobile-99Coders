@@ -1,0 +1,15 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<BorlandProject>
+	<Transactions>
+    <Transaction>2020/09/04 16:29:53.000.780,=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/09/04 16:30:05.000.274,C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\UnitPrincipal.fmx=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Unit1.fmx</Transaction>
+    <Transaction>2020/09/04 16:30:05.000.274,C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\UnitPrincipal.pas=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Unit1.pas</Transaction>
+    <Transaction>2020/09/04 16:30:08.000.158,C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\Server.dproj=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Project1.dproj</Transaction>
+    <Transaction>2020/09/04 16:35:54.000.413,=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\Unit1.pas</Transaction>
+    <Transaction>2020/09/04 16:36:10.000.621,C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\UnitDM.dfm=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\Unit1.dfm</Transaction>
+    <Transaction>2020/09/04 16:36:10.000.621,C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\UnitDM.pas=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\Semana Mobile - Comandas\Servidor\Unit1.pas</Transaction>
+  </Transactions>
+	<ActiveMobileDevice>
+		<NoProfile iOSSimulator="iPhone5" Android64="" Android=""/>
+	</ActiveMobileDevice>
+</BorlandProject>

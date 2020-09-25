@@ -33,7 +33,7 @@ type
       const LocalClickPos: TPointF; const ItemObject: TListItemDrawable);
   private
     TotalComanda : Double;
-    procedure AddProdutoResumo(IdConsumo,IdProduto: Integer; Descricao: String; Qtd: Integer;Preco: Double);
+    procedure AddProdutoResumo(IdConsumo,IdProduto: Integer; Descricao,Obs,ObsOpc: String; Qtd: Integer;Preco,VlOpc: Double);
     procedure ListarProdutos;
   public
   end;
@@ -47,7 +47,7 @@ implementation
 
 uses UnitPrincipal, UnitDM, UnitAddItem;
 
-procedure TFormResumo.AddProdutoResumo(IdConsumo,IdProduto: Integer; Descricao: String; Qtd: Integer;Preco: Double);
+procedure TFormResumo.AddProdutoResumo(IdConsumo,IdProduto: Integer; Descricao,Obs,ObsOpc: String; Qtd: Integer;Preco,VlOpc: Double);
 begin
   with lvProdutos.Items.Add do
   begin
@@ -56,6 +56,8 @@ begin
     TListItemText(Objects.FindDrawable('TxtDescricao')).Text := Qtd.ToString + ' x ' + Descricao;
     TListItemText(Objects.FindDrawable('TxtPreco')).Text     := FormatFloat('##0.00',Preco);
     TListItemImage(Objects.FindDrawable('ImgDel')).Bitmap    := ImgDel.Bitmap;
+    TListItemText(Objects.FindDrawable('TxtObs')).Text       := Obs;
+    TListItemText(Objects.FindDrawable('TxtOpcional')).Text  := ObsOpc;
   end;
 end;
 
@@ -97,9 +99,13 @@ begin
       AddProdutoResumo(JSONArray.Get(i).GetValue<Integer>('ID_CONSUMO'),
       JSONArray.Get(i).GetValue<Integer>('ID_PRODUTO'),
       JSONArray.Get(i).GetValue<String>('DESCRICAO'),
+      JSONArray.Get(i).GetValue<String>('OBS'),
+      JSONArray.Get(i).GetValue<String>('OBS_OPCIONAL'),
       JSONArray.Get(i).GetValue<Integer>('QTD'),
-      JSONArray.Get(i).GetValue<Double>('VALOR_TOTAL'));
-      TotalComanda := TotalComanda + JSONArray.Get(i).GetValue<Double>('VALOR_TOTAL');
+      JSONArray.Get(i).GetValue<Double>('VALOR_TOTAL'),
+      JSONArray.Get(i).GetValue<Double>('VALOR_OPCIONAL'));
+      TotalComanda := TotalComanda  +
+                      JSONArray.Get(i).GetValue<Double>('VALOR_TOTAL');
     end;
     LblTotal.Text := FormatFloat('##0.00',TotalComanda);
   end else

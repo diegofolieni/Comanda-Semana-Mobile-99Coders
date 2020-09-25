@@ -42,6 +42,9 @@ type
     ImgCloseDialog: TImage;
     EditObsAdicional: TEdit;
     lvOpcional: TListView;
+    ImageChecked: TImage;
+    ImageUnChecked: TImage;
+    Rectangle1: TRectangle;
     procedure ImgFecharClick(Sender: TObject);
     procedure ImgVoltarClick(Sender: TObject);
     procedure lvCategoriaItemClick(const Sender: TObject;
@@ -52,10 +55,13 @@ type
     procedure ImgAddQtdeClick(Sender: TObject);
     procedure ImgCloseDialogClick(Sender: TObject);
     procedure RecAdicionarClick(Sender: TObject);
+    procedure lvOpcionalItemClickEx(const Sender: TObject; ItemIndex: Integer;
+      const LocalClickPos: TPointF; const ItemObject: TListItemDrawable);
   private
     procedure AddCategoria(Id:Integer;Descricao, Icone:String);
     procedure ListarCategorias;
-    procedure AddProduto(Id:Integer;Descricao:String;Vlr:Double);
+    procedure AddProduto(IdOpcao: Integer; Descricao: String; Vlr: Double);
+    procedure AddOpcional(IdOpcao:Integer; Descricao:String;Valor:Double);
     procedure ListarProdutos(IdCategoria: Integer;Busca:String);
     procedure ListarOpcional(IdProduto:Integer);
     function ConverteValor(Vlr: String): Double;
@@ -93,11 +99,25 @@ begin
   end;
 end;
 
-procedure TFormAddItem.AddProduto(Id: Integer; Descricao: String; Vlr: Double);
+procedure TFormAddItem.AddOpcional(IdOpcao: Integer; Descricao: String;
+  Valor: Double);
+begin
+  with lvOpcional.Items.Add do
+  begin
+    Tag      := IdOpcao;
+    TListItemText(Objects.FindDrawable('TxtDescricao')).Text := Descricao;
+    TListItemText(Objects.FindDrawable('TxtValor'    )).Text := FormatFloat('#,##0.00', Valor);
+    TListItemImage(Objects.FindDrawable('ImgCheck')).Bitmap  := ImageUnChecked.Bitmap;
+    TListItemImage(Objects.FindDrawable('ImgCheck')).TagString := 'F';
+    TListItemImage(Objects.FindDrawable('ImgCheck')).TagFloat  := Valor;
+  end;
+end;
+
+procedure TFormAddItem.AddProduto(IdOpcao: Integer; Descricao: String; Vlr: Double);
 begin
   with lvProdutos.Items.Add do
   begin
-    Tag := Id;
+    Tag := IdOpcao;
     TListItemText(Objects.FindDrawable('TxtDescricao')).Text := Descricao;
     TListItemText(Objects.FindDrawable('TxtPreco')).Text     := FormatFloat('##0.00',Vlr);
     TListItemImage(Objects.FindDrawable('ImgAdd')).Bitmap    := ImgAdd.Bitmap;
@@ -210,14 +230,21 @@ var
   JSONArray: TJSONArray;
 begin
   lvOpcional.Items.Clear;
+  if(IdProduto<=0)then
+  begin
+    lvOpcional.Visible := False;
+    exit;
+  end;
   if(DM.ListarOpcional(IdProduto,JSONArray,Erro))then
   begin
     for i:=0 to Pred(JSONArray.Size) do
     begin
-      AddProduto(JSONArray.Get(i).GetValue<Integer>('ID_OPCAO'),
-      JSONArray.Get(i).GetValue<String>('DESCRICAO'),
-      JSONArray.Get(i).GetValue<Double>('VALOR'));
+      AddOpcional(JSONArray.Get(i).GetValue<Integer>('ID_OPCAO'),
+                 JSONArray.Get(i).GetValue<String>('DESCRICAO'),
+                 JSONArray.Get(i).GetValue<Double>('VALOR'));
     end;
+    lvOpcional.Visible := JSONArray.Size > 0;
+    JSONArray.DisposeOf;
   end else
   begin
     ShowMessage('Ocorreu um Erro ao Listar os Opcionais: ' + Erro);
@@ -254,6 +281,27 @@ begin
   TabControl.GoToVisibleTab(1,TTabTransition.Slide);
 end;
 
+procedure TFormAddItem.lvOpcionalItemClickEx(const Sender: TObject;
+  ItemIndex: Integer; const LocalClickPos: TPointF;
+  const ItemObject: TListItemDrawable);
+begin
+  if(TListView(Sender).Selected<>nil)then
+  begin
+    if(ItemObject is TListItemImage)then
+    begin
+      if(TListItemImage(ItemObject).TagString='F')then
+      begin
+        TListItemImage(ItemObject).Bitmap := ImageChecked.Bitmap;
+        TListItemImage(ItemObject).TagString := 'V';
+      end else
+      begin
+        TListItemImage(ItemObject).Bitmap := ImageUnChecked.Bitmap;
+        TListItemImage(ItemObject).TagString := 'F';
+      end;
+    end;
+  end;
+end;
+
 procedure TFormAddItem.lvProdutosItemClick(const Sender: TObject;
   const AItem: TListViewItem);
 begin
@@ -264,19 +312,44 @@ begin
   lblQtde.TagFloat      := ConverteValor(TListItemText(AItem.Objects.FindDrawable('TxtPreco')).Text);
 
   //Verificar Opcionais....
+  ListarOpcional(AItem.Tag);
 
-
+  EditObsAdicional.Text.Empty;
   LayoutQtde.Visible := True;
 end;
 
 procedure TFormAddItem.RecAdicionarClick(Sender: TObject);
 var
-  Erro: String;
+  Erro, ObsOpcional: String;
+  VlOpcional: Double;
+  i: integer;
 begin
+//Verificar Adicionais-------
+  VlOpcional := 0;
+  ObsOpcional   := '';
+  for i := 0 to Pred(lvOpcional.Items.Count)do
+  begin
+    if(TListItemImage(lvOpcional.Items[i].Objects.FindDrawable('ImgCheck')).TagString='V')then
+    begin
+      VlOpcional := VlOpcional + (TListItemImage(lvOpcional.Items[i].Objects.FindDrawable('ImgCheck')).TagFloat * lblQtde.Text.ToInteger);
+      if(Trim(ObsOpcional)<>'')then
+        ObsOpcional := ObsOpcional + ' + ';
+      ObsOpcional   := ObsOpcional + TListItemText(lvOpcional.Items[i].Objects.FindDrawable('TxtDescricao')).Text;
+    end;
+  end;
+
+  if(Trim(ObsOpcional)<>'')then
+    ObsOpcional := ObsOpcional + ' = ' + FormatFloat('#,##0.00', VlOpcional);
+
+
+//Adiciona Produto-----------
   if(DM.AdicionarProdutoComanda(Comanda,
                                 lblProdutoDialog.Tag,
                                 lblQtde.Text.ToInteger,
                                 lblQtde.Text.ToInteger * lblQtde.TagFloat,
+                                EditObsAdicional.Text,
+                                ObsOpcional,
+                                VlOpcional,
                                 Erro))then
   begin
     ShowMessage('Produto inserido');

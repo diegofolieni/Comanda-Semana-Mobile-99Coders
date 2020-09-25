@@ -34,7 +34,7 @@ type
     function ListarCategorias(out JsArray: TJSONArray; out Erro: String):Boolean;
     function ListarProdutos(IdCategoria: Integer;TermoBusca:String;Pagina:Integer;out JsArray:TJSONArray;out Erro:String):Boolean;
     function ListarProdutosComanda(IdComanda:String;out JSArray:TJSONArray;out Erro:String):Boolean;
-    function AdicionarProdutoComanda(IdComanda: String; IdProduto,Qtd: Integer; VlrTotal: Double; out Erro:String): Boolean;
+    function AdicionarProdutoComanda(IdComanda: String; IdProduto,Qtd: Integer; VlrTotal: Double;Obs, ObsOpcional:String;VlOpcional:Double; out Erro:String): Boolean;
     function ExcluirProdutoComanda(IdComanda:String;IdConsumo:integer;out Erro:String):Boolean;
     function EncerrarComanda(IdComanda: String; out Erro: String):Boolean;
     function ListarOpcional(IdProduto: Integer;out JsArray:TJSONArray;out Erro: String): Boolean;
@@ -49,7 +49,7 @@ implementation
 
 {$R *.dfm}
 
-function TDM.AdicionarProdutoComanda(IdComanda: String; IdProduto,Qtd: Integer; VlrTotal: Double; out Erro:String): Boolean;
+function TDM.AdicionarProdutoComanda(IdComanda: String; IdProduto,Qtd: Integer; VlrTotal: Double;Obs, ObsOpcional:String;VlOpcional:Double; out Erro:String): Boolean;
 var
   JsonObj : TJSONObject;
   Json : String;
@@ -63,6 +63,10 @@ begin
     AddParameter('id_produto',IdProduto.ToString,TRESTRequestParameterKind.pkGETorPOST);
     AddParameter('qtd'       ,Qtd.ToString      ,TRESTRequestParameterKind.pkGETorPOST);
     AddParameter('vlr_total' ,FormatFloat('0.00',VlrTotal).Replace(',','').Replace('.','')
+                                       ,TRESTRequestParameterKind.pkGETorPOST);
+    AddParameter('obs' , Obs , TRESTRequestParameterKind.pkGETorPOST);
+    AddParameter('obs_opcional', ObsOpcional, TRESTRequestParameterKind.pkGETorPOST);
+    AddParameter('vl_opcional',FormatFloat('0.00',VlOpcional).Replace(',','').Replace('.','')
                                        ,TRESTRequestParameterKind.pkGETorPOST);
     Execute;
 
@@ -310,28 +314,33 @@ var
   Json : String;
   JsonObj: TJSONObject;
 begin
-  RequestLogin.Params.Clear;
-  RequestLogin.AddParameter('usuario',usuario,TRESTRequestParameterKind.pkGETorPOST);
-  RequestLogin.Execute;
-  if(RequestLogin.Response.StatusCode<>200)then
-  begin
-    Result := False;
-    Erro := 'Erro ao Validar Login: ' + RequestLogin.Response.StatusCode.ToString;
-  end else
-  begin
-    Json := RequestLogin.Response.JSONValue.ToString;
-    JsonObj := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(Json),0) as TJSONObject;
-
-    if(JsonObj.GetValue('retorno').Value ='OK')then
-    begin
-      Erro:='';
-      Result := True;
-    end
-    else
+  try
+    RequestLogin.Params.Clear;
+    RequestLogin.AddParameter('usuario',usuario,TRESTRequestParameterKind.pkGETorPOST);
+    RequestLogin.Execute;
+    if(RequestLogin.Response.StatusCode<>200)then
     begin
       Result := False;
-      Erro := JsonObj.GetValue('retorno').Value;
+      Erro := 'Erro ao Validar Login: ' + RequestLogin.Response.StatusCode.ToString;
+    end else
+    begin
+      Json := RequestLogin.Response.JSONValue.ToString;
+      JsonObj := TJSONObject.ParseJSONValue(TEncoding.UTF8.GetBytes(Json),0) as TJSONObject;
+
+      if(JsonObj.GetValue('retorno').Value ='OK')then
+      begin
+        Erro:='';
+        Result := True;
+      end
+      else
+      begin
+        Result := False;
+        Erro := JsonObj.GetValue('retorno').Value;
+      end;
     end;
+  except
+    on E:Exception do
+      raise Exception.Create('Ocorreu um Erro ao tentar Logar: ' + E.Message);
   end;
 end;
 

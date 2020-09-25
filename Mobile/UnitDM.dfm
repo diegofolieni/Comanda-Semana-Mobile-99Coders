@@ -5,9 +5,6 @@ object DM: TDM
   Width = 448
   object Conn: TFDConnection
     Params.Strings = (
-      
-        'Database=C:\Users\Prog-3\Documents\Embarcadero\Studio\Projects\S' +
-        'emana Mobile - Comandas\Mobile\DB\Comanda_Mobile.db'
       'LockingMode=Normal'
       'DriverID=SQLite')
     LoginPrompt = False
@@ -22,11 +19,10 @@ object DM: TDM
   object RESTClient: TRESTClient
     Accept = 'application/json, text/plain; q=0.9, text/html;q=0.8,'
     AcceptCharset = 'utf-8, *;q=0.8'
-    BaseURL = 'http://localhost:8082'
     Params = <>
     RaiseExceptionOn500 = False
     Left = 32
-    Top = 104
+    Top = 112
   end
   object RequestLogin: TRESTRequest
     Client = RESTClient

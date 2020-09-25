@@ -83,12 +83,15 @@ begin
 
       Qry.Active := False;
       Qry.SQL.Clear;
-      Qry.SQL.Add('INSERT INTO TAB_COMANDA_CONSUMO(ID_COMANDA,ID_PRODUTO,QTD,VALOR_TOTAL)');
-      Qry.SQL.Add('VALUES(:ID_COMANDA,:ID_PRODUTO,:QTD,:VALOR_TOTAL)');
-      Qry.ParamByName('ID_COMANDA' ).AsString  := Params.ItemsString['id_comanda'].AsString;
-      Qry.ParamByName('ID_PRODUTO' ).AsInteger := Params.ItemsString['id_produto'].AsInteger;
-      Qry.ParamByName('QTD'        ).AsInteger := Params.ItemsString['qtd'       ].AsInteger;
-      Qry.ParamByName('VALOR_TOTAL').AsFloat   := Params.ItemsString['vlr_total' ].AsFloat;
+      Qry.SQL.Add('INSERT INTO TAB_COMANDA_CONSUMO(ID_COMANDA,ID_PRODUTO,QTD,VALOR_TOTAL,OBS,OBS_OPCIONAL,VALOR_OPCIONAL)');
+      Qry.SQL.Add('VALUES(:ID_COMANDA,:ID_PRODUTO,:QTD,:VALOR_TOTAL,:OBS,:OBS_OPCIONAL,:VALOR_OPCIONAL)');
+      Qry.ParamByName('ID_COMANDA'    ).AsString  := Params.ItemsString['id_comanda'  ].AsString;
+      Qry.ParamByName('ID_PRODUTO'    ).AsInteger := Params.ItemsString['id_produto'  ].AsInteger;
+      Qry.ParamByName('QTD'           ).AsInteger := Params.ItemsString['qtd'         ].AsInteger;
+      Qry.ParamByName('VALOR_TOTAL'   ).AsFloat   := Params.ItemsString['vlr_total'   ].AsFloat + (Params.ItemsString['vl_opcional'].AsFloat/100);
+      Qry.ParamByName('OBS'           ).AsString  := Params.ItemsString['obs'         ].AsString;
+      Qry.ParamByName('OBS_OPCIONAL'  ).AsString  := Params.ItemsString['obs_opcional'].AsString;
+      Qry.ParamByName('VALOR_OPCIONAL').AsFloat   := Params.ItemsString['vl_opcional' ].AsFloat/100;
       Qry.ExecSQL;
 
       Json.AddPair('retorno','OK');
@@ -258,23 +261,19 @@ begin
     Qry.Connection := Conn;
     Qry.Active := False;
     Qry.SQL.Clear;
-    if(Params.ItemsString['id_produto'].AsString='')then
-    begin
-      Result := '{"retorno":"É preciso passar um IdProduto"}';
-    end else
-    begin
-      Qry.SQL.Add('SELECT * ');
-      Qry.SQL.Add('FROM TAB_PRODUTO_OPCIONAL ');
-      Qry.SQL.Add('WHERE ID_PRODUTO = :ID_PRODUTO');
-      Qry.ParamByName('ID_PRODUTO').AsInteger := Params.ItemsString['id_produto'].AsInteger;
-      Qry.SQL.Add('ORDER BY DESCRICAO');
 
-      Qry.Active := True;
+    Qry.SQL.Add('SELECT * ');
+    Qry.SQL.Add('FROM TAB_PRODUTO_OPCIONAL ');
+    Qry.SQL.Add('WHERE ID_PRODUTO = :ID_PRODUTO');
+    Qry.ParamByName('ID_PRODUTO').AsInteger := Params.ItemsString['id_produto'].AsInteger;
+    Qry.SQL.Add('ORDER BY DESCRICAO');
 
-      Json.LoadFromDataSet('',Qry,False,jmPureJSON);
+    Qry.Active := True;
 
-      Result := Json.ToJSON;
-    end;
+    Json.LoadFromDataSet('',Qry,False,jmPureJSON);
+
+    Result := Json.ToJSON;
+
   finally
     Qry.DisposeOf;
     Json.DisposeOf;
@@ -293,7 +292,14 @@ begin
     Qry.Connection := Conn;
     Qry.Active := False;
     Qry.SQL.Clear;
-    Qry.SQL.Add('SELECT C.ID_CONSUMO, P.ID_PRODUTO, P.DESCRICAO, C.QTD, C.VALOR_TOTAL');
+    Qry.SQL.Add('SELECT C.ID_PRODUTO   AS ID_PRODUTO,');
+    Qry.SQL.Add('       C.ID_CONSUMO   AS ID_CONSUMO,');
+    Qry.SQL.Add('       C.OBS          AS OBS,');
+    Qry.SQL.Add('       C.OBS_OPCIONAL AS OBS_OPCIONAL,');
+    Qry.SQL.Add('       C.QTD          AS QTD,');
+    Qry.SQL.Add('       C.VALOR_TOTAL  AS VALOR_TOTAL,');
+    Qry.SQL.Add('       COALESCE(C.VALOR_OPCIONAL,0) AS VALOR_OPCIONAL,');
+    Qry.SQL.Add('       P.DESCRICAO  AS DESCRICAO');
     Qry.SQL.Add('FROM TAB_COMANDA_CONSUMO C');
     Qry.SQL.Add('JOIN TAB_PRODUTO P ON (P.ID_PRODUTO = C.ID_PRODUTO)');
     Qry.SQL.Add('WHERE C.ID_COMANDA = :ID_COMANDA');
@@ -378,7 +384,7 @@ begin
       if(QryLogin.RecordCount>0)then
         Json.AddPair('retorno','OK')
       else
-        Json.AddPair('retorno','Usuário não informado');
+        Json.AddPair('retorno','Usuário não encontrado');
     except
       on E:Exception do
         Json.AddPair('retorno','Erro ao Logar: ' + E.Message);

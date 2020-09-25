@@ -104,6 +104,27 @@ object DM: TDM
             ObjectValue = ovString
             ParamName = 'vlr_total'
             Encoded = True
+          end
+          item
+            TypeObject = toParam
+            ObjectDirection = odIN
+            ObjectValue = ovString
+            ParamName = 'obs_opcional'
+            Encoded = False
+          end
+          item
+            TypeObject = toParam
+            ObjectDirection = odIN
+            ObjectValue = ovString
+            ParamName = 'vl_opcional'
+            Encoded = False
+          end
+          item
+            TypeObject = toParam
+            ObjectDirection = odIN
+            ObjectValue = ovString
+            ParamName = 'obs'
+            Encoded = False
           end>
         JsonMode = jmPureJSON
         Name = 'AdicionarProdutoComanda'
